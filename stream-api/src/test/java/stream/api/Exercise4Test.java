@@ -4,6 +4,7 @@ import common.test.tool.annotation.Easy;
 import common.test.tool.dataset.ClassicOnlineStore;
 import common.test.tool.entity.Customer;
 
+import common.test.tool.entity.Item;
 import org.junit.Test;
 
 import java.util.List;
@@ -23,7 +24,7 @@ public class Exercise4Test extends ClassicOnlineStore {
          * Find the first customer who registered this online store by using {@link Stream#findFirst}
          * The customerList are ascending ordered by registered timing.
          */
-        Optional<Customer> firstCustomer = null;
+        Optional<Customer> firstCustomer = customerList.stream().findFirst();
 
         assertThat(firstCustomer.get(), is(customerList.get(0)));
     }
@@ -35,7 +36,7 @@ public class Exercise4Test extends ClassicOnlineStore {
         /**
          * Check whether any customer older than 40 exists or not, by using {@link Stream#anyMatch}
          */
-        boolean olderThan40Exists = true;
+        boolean olderThan40Exists = customerList.stream().anyMatch(c -> c.getAge() > 40);
 
         assertThat(olderThan40Exists, is(false));
     }
@@ -47,7 +48,7 @@ public class Exercise4Test extends ClassicOnlineStore {
         /**
          * Check whether all customer are older than 20 or not, by using {@link Stream#allMatch}
          */
-        boolean allOlderThan20 = false;
+        boolean allOlderThan20 = customerList.stream().allMatch(customer -> customer.getAge() > 20);
 
         assertThat(allOlderThan20, is(true));
     }
@@ -60,7 +61,10 @@ public class Exercise4Test extends ClassicOnlineStore {
          * Confirm that none of the customer has empty list for their {@link Customer.wantToBuy}
          * by using {@link Stream#noneMatch}
          */
-        boolean everyoneWantsSomething = false;
+        boolean everyoneWantsSomething = customerList.stream()
+                .flatMap(c -> c.getWantToBuy().stream())
+                .map(Item::getName)
+                .noneMatch(list -> list.isEmpty());
 
         assertThat(everyoneWantsSomething, is(true));
     }
