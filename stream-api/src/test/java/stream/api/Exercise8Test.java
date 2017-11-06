@@ -8,6 +8,7 @@ import common.test.tool.entity.Shop;
 
 import org.junit.Test;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -55,9 +56,26 @@ public class Exercise8Test extends ClassicOnlineStore {
          * Items that are not on sale can be counted as 0 money cost.
          * If there is several same items with different prices, customer can choose the cheapest one.
          */
-        List<Item> onSale = shopStream.flatMap(shop -> shop.getItemList().stream()).collect(Collectors.toList());
+        List<Item> onSale = shopStream.flatMap(shop -> shop.getItemList().stream())
+                .collect(Collectors.toList());
+
         Predicate<Customer> havingEnoughMoney = null;
-        List<String> customerNameList = null;
+
+        List<String> customerNameList = customerStream
+                .map(customer -> {
+                    customer.getWantToBuy().stream()
+                            .map(i -> onSale.stream()
+                                    .filter(x -> x.equals(i))
+                                    .min(Comparator.comparingInt(item -> item.getPrice()))
+                            )
+                            .forEach(optionalItem ->
+                                    optionalItem.ifPresent(item -> customer.setBudget(customer.getBudget() - item.getPrice()))
+                            );
+
+                    return customer.getBudget() > 0 ? customer.getName() : "";
+                })
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
 
         assertThat(customerNameList, hasSize(7));
         assertThat(customerNameList, hasItems("Joe", "Patrick", "Chris", "Kathy", "Alice", "Andrew", "Amy"));
